@@ -1,5 +1,9 @@
-import type { LoaderFunction, MetaFunction } from "@remix-run/node";
-import { json, Link, useLoaderData } from "@remix-run/react";
+import type {
+  LoaderFunction,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/node";
+import { json, Link, useLoaderData, useSearchParams } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 
@@ -13,16 +17,24 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader: LoaderFunction = async () => {
-  const response = await fetch("https://api.jirayu.net/lavalink/track");
+export const loader: LoaderFunction = async ({
+  request,
+}: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const query = url.searchParams;
+  const limit = Number(query.get("limit") || 10);
+
+  const response = await fetch(
+    `https://api.jirayu.net/lavalink/track?limit=${limit}`
+  );
   const data = await response.json();
 
   return json(data);
 };
 
 export default function Index() {
-  const data: Data[] = useLoaderData();
-  console.log(data);
+  const data = useLoaderData<Data[]>();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   return (
     <div className="container py-12 px-12 mx-auto">
@@ -34,7 +46,7 @@ export default function Index() {
           </p>
         </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button className="bg-primary" size={"sm"} asChild>
             <Link to="https://discord.com/oauth2/authorize?client_id=1085549382528667790&permissions=540388368&scope=applications.commands+bot">
               Murphy#9654
@@ -55,39 +67,63 @@ export default function Index() {
 
       <Separator className="my-6" />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 abs gap-4">
-        {data.map((item) => (
-          <div
-            key={item.id}
-            className="w-full h-full p-4 rounded shadow relative overflow-hidden"
-          >
+      {data.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-4 abs gap-4">
+          {data.map((item) => (
             <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage: `url(${
-                  item.artworkUrl ??
-                  "https://cdn.chompubot.work/images/discordserver.png"
-                })`,
-                opacity: 0.5,
-              }}
-            />
+              key={item.id}
+              className="w-full h-full p-4 rounded shadow relative overflow-hidden"
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url(${
+                    item.artworkUrl ??
+                    "https://cdn.chompubot.work/images/discordserver.png"
+                  })`,
+                  opacity: 0.5,
+                }}
+              />
 
-            <div className="relative z-10">
-              <Link
-                className="font-bold text-sm transition underline hover:text-white/75"
-                to={item.uri}
-              >
-                {item.title.length > 25
-                  ? item.title.slice(0, 25) + "..."
-                  : item.title}
-              </Link>
-              <p className="text-white/50 text-xs">
-                มีการเล่นซ้ำจำนวน {item.count} ครั้ง
-              </p>
+              <div className="relative z-10">
+                <Link
+                  className="font-bold text-sm transition underline hover:text-white/75"
+                  to={item.uri}
+                >
+                  {item.title.length > 25
+                    ? item.title.slice(0, 25) + "..."
+                    : item.title}
+                </Link>
+                <p className="text-white/50 text-xs">
+                  มีการเล่นซ้ำจำนวน {item.count} ครั้ง
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2 items-center justify-center flex flex-col min-w-full min-h-full">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary" />
+          <p className="text-primary animate-pulse">กําลังโหลดข้อมูล</p>
+        </div>
+      )}
+
+      <Separator className="my-6" />
+
+      <Button
+        variant={"ghost"}
+        className="underline"
+        onClick={() =>
+          setSearchParams(
+            {
+              limit: (Number(searchParams.get("limit") || 10) + 10).toString(),
+            },
+            { preventScrollReset: true }
+          )
+        }
+      >
+        ดูเพิ่มเติม
+      </Button>
     </div>
   );
 }
