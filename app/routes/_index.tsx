@@ -34,7 +34,7 @@ export default function Index() {
           </p>
         </div>
 
-        <div className="flex flex-row items-center space-x-2">
+      <div className="flex flex-wrap items-center gap-2">
           <Button className="bg-primary" size={"sm"} asChild>
             <Link to="https://discord.com/oauth2/authorize?client_id=1085549382528667790&permissions=540388368&scope=applications.commands+bot">
               Murphy#9654
@@ -56,7 +56,7 @@ export default function Index() {
       <Separator className="my-6" />
 
       <div className="grid grid-cols-1 md:grid-cols-4 abs gap-4">
-        {data.slice(0,48).map((item) => (
+        {data.map((item) => (
           <div
             key={item.id}
             className="w-full h-full p-4 rounded shadow relative overflow-hidden"
@@ -77,8 +77,8 @@ export default function Index() {
                 className="font-bold text-sm transition underline hover:text-white/75"
                 to={item.uri}
               >
-                {item.title.length > 30
-                  ? item.title.slice(0, 30) + "..."
+                {item.title.length > 25
+                  ? item.title.slice(0, 25) + "..."
                   : item.title}
               </Link>
               <p className="text-white/50 text-xs">
