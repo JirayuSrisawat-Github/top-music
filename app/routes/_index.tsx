@@ -8,7 +8,7 @@ export const meta: MetaFunction = () => {
     { title: "Top Music's Chart" },
     {
       name: "description",
-      content: "เพลงที่มีคนฟังมากที่สุดบนบอท Murphy, Asta",
+      content: "เพลงที่มีคนฟังมากที่สุดบนบอท Murphy, Asta และ Chompu",
     },
   ];
 };
