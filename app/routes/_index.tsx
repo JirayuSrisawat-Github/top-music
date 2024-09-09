@@ -3,7 +3,14 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from "@remix-run/node";
-import { json, Link, useLoaderData, useSearchParams } from "@remix-run/react";
+import {
+  Await,
+  defer,
+  Link,
+  useLoaderData,
+  useSearchParams,
+} from "@remix-run/react";
+import { Suspense } from "react";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 
@@ -24,16 +31,15 @@ export const loader: LoaderFunction = async ({
   const query = url.searchParams;
   const limit = Number(query.get("limit") || 10);
 
-  const response = await fetch(
-    `https://api.jirayu.net/lavalink/track?limit=${limit}`
-  );
-  const data = await response.json();
-
-  return json(data);
+  return defer({
+    data: fetch(`https://api.jirayu.net/lavalink/track?limit=${limit}`).then(
+      (it) => it.json()
+    ),
+  });
 };
 
 export default function Index() {
-  const data = useLoaderData<Data[]>();
+  const { data } = useLoaderData<{ data: Data[] }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   return (
@@ -67,46 +73,52 @@ export default function Index() {
 
       <Separator className="my-6" />
 
-      {data.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 abs gap-4">
-          {data.map((item) => (
-            <div
-              key={item.id}
-              className="w-full h-full p-4 rounded shadow relative overflow-hidden"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{
-                  backgroundImage: `url(${
-                    item.artworkUrl ??
-                    "https://cdn.chompubot.work/images/discordserver.png"
-                  })`,
-                  opacity: 0.5,
-                }}
-              />
-
-              <div className="relative z-10">
-                <Link
-                  className="font-bold text-sm transition underline hover:text-white/75"
-                  to={item.uri}
+      <Suspense
+        fallback={
+          <div className="space-y-2 items-center justify-center flex flex-col min-w-full min-h-full">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary" />
+            <p className="text-primary animate-pulse">กําลังโหลดข้อมูล</p>
+          </div>
+        }
+      >
+        <Await resolve={data}>
+          {(data) => (
+            <div className="grid grid-cols-1 md:grid-cols-4 abs gap-4">
+              {data.map((item) => (
+                <div
+                  key={item.id}
+                  className="w-full h-full p-4 rounded shadow relative overflow-hidden"
                 >
-                  {item.title.length > 25
-                    ? item.title.slice(0, 25) + "..."
-                    : item.title}
-                </Link>
-                <p className="text-white/50 text-xs">
-                  มีการเล่นซ้ำจำนวน {item.count} ครั้ง
-                </p>
-              </div>
+                  <div
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                    style={{
+                      backgroundImage: `url(${
+                        item.artworkUrl ??
+                        "https://cdn.chompubot.work/images/discordserver.png"
+                      })`,
+                      opacity: 0.5,
+                    }}
+                  />
+
+                  <div className="relative z-10">
+                    <Link
+                      className="font-bold text-sm transition underline hover:text-white/75"
+                      to={item.uri}
+                    >
+                      {item.title.length > 25
+                        ? item.title.slice(0, 25) + "..."
+                        : item.title}
+                    </Link>
+                    <p className="text-white/50 text-xs">
+                      มีการเล่นซ้ำจำนวน {item.count} ครั้ง
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-2 items-center justify-center flex flex-col min-w-full min-h-full">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary" />
-          <p className="text-primary animate-pulse">กําลังโหลดข้อมูล</p>
-        </div>
-      )}
+          )}
+        </Await>
+      </Suspense>
 
       <Separator className="my-6" />
 
