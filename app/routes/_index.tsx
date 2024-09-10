@@ -93,8 +93,10 @@ export default function Index() {
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                     style={{
                       backgroundImage: `url(${
-                        item.artworkUrl ??
-                        "https://cdn.chompubot.work/images/discordserver.png"
+                        item.source === "youtube"
+                          ? `https://i.ytimg.com/vi/${item.identifier}/maxresdefault.jpg`
+                          : item.artworkUrl ??
+                            "https://cdn.chompubot.work/images/discordserver.png"
                       })`,
                       opacity: 0.5,
                     }}
@@ -149,4 +151,5 @@ type Data = {
   updatedAt: string;
   uri: string;
   artworkUrl: string;
+  source: string;
 };
